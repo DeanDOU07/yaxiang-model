@@ -1,0 +1,24 @@
+name: yaxiang_model
+on:
+  schedule:
+    - cron: '30 7 * * 1-5'
+  workflow_dispatch:
+jobs:
+  run-model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: deps
+        run: pip install akshare pandas numpy
+      - name: run
+        run: python model_layer1.py
+      - name: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ github.run_number }}
+          path: outputs/
+          retention-days: 30
