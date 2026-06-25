@@ -153,10 +153,10 @@ for code,name,desc,rarity in CANDIDATES:
 l1_passed = [r for r in l1_results if r["pass"]]
 l1_passed.sort(key=lambda x:x["score"], reverse=True)
 
-print(Layer1 passed: {len(l1_passed)}/{len(l1_results)}")
+print(f"Layer1 passed: {len(l1_passed)}/{len(l1_results)}")
 
 # Layer 2
-print(Layer 2: V4 signals for passed stocks")
+print("Layer 2: V4 signals for passed stocks")
 l2_results = []
 for r in l1_passed:
     v4 = v4_signal(r["code"])
@@ -174,7 +174,7 @@ rep = {"date":str(datetime.now()),"total_candidates":len(CANDIDATES),
        "recommendations":l2_results}
 with open(OUT/"full_report.json","w",encoding="utf-8") as f:
     json.dump(rep,f,ensure_ascii=False,indent=2)
-print(Report saved: {OUT}/full_report.json")
+print(f"Report saved: {OUT}/full_report.json")
 print("Done")
 
 
