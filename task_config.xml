@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Date>2026-06-25T15:30:00</Date>
+    <Author>DeanDOU07</Author>
+    <Description>亚翔集成选股模型 - 每个交易日收盘后自动运行</Description>
+  </RegistrationInfo>
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>2026-06-26T15:30:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <RunLevel>LeastPrivilege</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <Enabled>true</Enabled>
+    <AllowStartIfOnBatteries>true</AllowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <Priority>7</Priority>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>powershell.exe</Command>
+      <Arguments>-ExecutionPolicy Bypass -File "C:\Users\14989\Desktop\亚翔模型_静默运行.ps1"</Arguments>
+    </Exec>
+  </Actions>
+</Task>

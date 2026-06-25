@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-亚翔集成分层选股模型 v1.0
+浜氱繑闆嗘垚鍒嗗眰閫夎偂妯″瀷 v1.0
 ============================
-Layer 1: 基本面筛选（低频, 季报更新）
-Layer 2: V4时机判断（高频, 日频更新）
-
-作者: Codex
-日期: 2026-06-25
+Layer 1: 鍩烘湰闈㈢瓫閫夛紙浣庨, 瀛ｆ姤鏇存柊锛?Layer 2: V4鏃舵満鍒ゆ柇锛堥珮棰? 鏃ラ鏇存柊锛?
+浣滆€? Codex
+鏃ユ湡: 2026-06-25
 """
 
 import akshare as ak
@@ -18,74 +16,71 @@ from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-# ===================== 配置区 =====================
-OUT = Path(__file__).parent / "outputs"
+# ===================== 閰嶇疆鍖?=====================
+OUT = Path(__file__).parent
 OUT.mkdir(parents=True, exist_ok=True)
 
-# 候选股票池（可自行增删）
-CANDIDATES = [
-    # (代码, 名称, 细分领域, 稀缺性评分1-5)
-    ("300308","中际旭创","光模块(全球第一)",5),
-    ("601138","工业富联","AI服务器代工",5),
-    ("603929","亚翔集成","洁净室(唯一)",5),
-    ("002916","深南电路","IC封装基板(唯一)",5),
-    ("002281","光迅科技","光芯片(自研EML)",4),
-    ("002837","英维克","AI液冷CDU",4),
-    ("002851","麦格米特","AI电源(英伟达链)",5),
-    ("002409","雅克科技","HBM前驱体",4),
-    ("600584","长电科技","先进封装(CoWoS)",4),
-    ("600183","生益科技","高频覆铜板(国内第一)",4),
-    ("603986","兆易创新","NOR Flash+MCU",4),
-    ("300476","胜宏科技","AI服务器PCB",3),
-    ("300274","阳光电源","逆变器(全球第一)",5),
-    ("300474","景嘉微","GPU(唯一)",5),
-    ("301269","华大九天","EDA(唯一)",5),
-    ("688981","中芯国际","晶圆代工(唯一)",5),
-    ("002475","立讯精密","连接器龙头",3),
-    ("300124","汇川技术","工控AI伺服",4),
-    ("688012","中微公司","刻蚀设备(唯一)",5),
-    ("002371","北方华创","半导体设备平台",4),
-    ("688008","澜起科技","DDR5接口(唯一)",5),
-    ("688256","寒武纪","AI芯片(唯一)",5),
-    ("300502","新易盛","800G光模块",4),
-    ("002156","通富微电","先进封装(AMD链)",4),
-    ("002436","兴森科技","FCBGA封装基板",4),
-    ("300394","天孚通信","光引擎",4),
-    ("688041","海光信息","CPU+DCU(唯一)",5),
-    ("688268","华特气体","电子特气",3),
-    ("688234","天岳先进","SiC衬底",4),
-    ("002428","云南锗业","磷化铟InP衬底",4),
-    ("300346","南大光电","MO源+光刻胶",4),
-    ("688629","华丰科技","高速背板连接器",4),
-    ("688668","鼎通科技","I/O连接器",3),
-    ("603738","泰晶科技","晶体振荡器",3),
-    ("300661","圣邦股份","电源管理IC",3),
+# 鍊欓€夎偂绁ㄦ睜锛堝彲鑷澧炲垹锛?CANDIDATES = [
+    # (浠ｇ爜, 鍚嶇О, 缁嗗垎棰嗗煙, 绋€缂烘€ц瘎鍒?-5)
+    ("300308","涓檯鏃垱","鍏夋ā鍧?鍏ㄧ悆绗竴)",5),
+    ("601138","宸ヤ笟瀵岃仈","AI鏈嶅姟鍣ㄤ唬宸?,5),
+    ("603929","浜氱繑闆嗘垚","娲佸噣瀹?鍞竴)",5),
+    ("002916","娣卞崡鐢佃矾","IC灏佽鍩烘澘(鍞竴)",5),
+    ("002281","鍏夎繀绉戞妧","鍏夎姱鐗?鑷爺EML)",4),
+    ("002837","鑻辩淮鍏?,"AI娑插喎CDU",4),
+    ("002851","楹︽牸绫崇壒","AI鐢垫簮(鑻变紵杈鹃摼)",5),
+    ("002409","闆呭厠绉戞妧","HBM鍓嶉┍浣?,4),
+    ("600584","闀跨數绉戞妧","鍏堣繘灏佽(CoWoS)",4),
+    ("600183","鐢熺泭绉戞妧","楂橀瑕嗛摐鏉?鍥藉唴绗竴)",4),
+    ("603986","鍏嗘槗鍒涙柊","NOR Flash+MCU",4),
+    ("300476","鑳滃畯绉戞妧","AI鏈嶅姟鍣≒CB",3),
+    ("300274","闃冲厜鐢垫簮","閫嗗彉鍣?鍏ㄧ悆绗竴)",5),
+    ("300474","鏅槈寰?,"GPU(鍞竴)",5),
+    ("301269","鍗庡ぇ涔濆ぉ","EDA(鍞竴)",5),
+    ("688981","涓姱鍥介檯","鏅跺渾浠ｅ伐(鍞竴)",5),
+    ("002475","绔嬭绮惧瘑","杩炴帴鍣ㄩ緳澶?,3),
+    ("300124","姹囧窛鎶€鏈?,"宸ユ帶AI浼烘湇",4),
+    ("688012","涓井鍏徃","鍒昏殌璁惧(鍞竴)",5),
+    ("002371","鍖楁柟鍗庡垱","鍗婂浣撹澶囧钩鍙?,4),
+    ("688008","婢滆捣绉戞妧","DDR5鎺ュ彛(鍞竴)",5),
+    ("688256","瀵掓绾?,"AI鑺墖(鍞竴)",5),
+    ("300502","鏂版槗鐩?,"800G鍏夋ā鍧?,4),
+    ("002156","閫氬瘜寰數","鍏堣繘灏佽(AMD閾?",4),
+    ("002436","鍏存．绉戞妧","FCBGA灏佽鍩烘澘",4),
+    ("300394","澶╁瓪閫氫俊","鍏夊紩鎿?,4),
+    ("688041","娴峰厜淇℃伅","CPU+DCU(鍞竴)",5),
+    ("688268","鍗庣壒姘斾綋","鐢靛瓙鐗规皵",3),
+    ("688234","澶╁渤鍏堣繘","SiC琛簳",4),
+    ("002428","浜戝崡閿椾笟","纾峰寲閾烮nP琛簳",4),
+    ("300346","鍗楀ぇ鍏夌數","MO婧?鍏夊埢鑳?,4),
+    ("688629","鍗庝赴绉戞妧","楂橀€熻儗鏉胯繛鎺ュ櫒",4),
+    ("688668","榧庨€氱鎶€","I/O杩炴帴鍣?,3),
+    ("603738","娉版櫠绉戞妧","鏅朵綋鎸崱鍣?,3),
+    ("300661","鍦ｉ偊鑲′唤","鐢垫簮绠＄悊IC",3),
 ]
 
-# ===================== Layer 1: 基本面筛选 =====================
+# ===================== Layer 1: 鍩烘湰闈㈢瓫閫?=====================
 def layer1_financial_filter(code):
-    """获取单只股票的基本面指标"""
+    """鑾峰彇鍗曞彧鑲＄エ鐨勫熀鏈潰鎸囨爣"""
     try:
         fin = ak.stock_financial_abstract(symbol=str(code))
         def gm(n,c):
-            r=fin[fin["指标"]==n]
+            r=fin[fin["鎸囨爣"]==n]
             if len(r)>0 and c in r.columns:v=r.iloc[0][c];return float(v) if pd.notna(v) else 0
             return 0
         
-        np_y=gm("归母净利润","20251231")/1e8
-        np_q1=gm("归母净利润","20260331")/1e8
-        np_q1_25=gm("归母净利润","20250331")/1e8
-        np_py=gm("归母净利润","20241231")/1e8
-        ocf=gm("经营现金流量净额","20251231")/1e8
-        eps=gm("基本每股收益","20251231")
-        rev_y=gm("营业总收入","20251231")/1e8
+        np_y=gm("褰掓瘝鍑€鍒╂鼎","20251231")/1e8
+        np_q1=gm("褰掓瘝鍑€鍒╂鼎","20260331")/1e8
+        np_q1_25=gm("褰掓瘝鍑€鍒╂鼎","20250331")/1e8
+        np_py=gm("褰掓瘝鍑€鍒╂鼎","20241231")/1e8
+        ocf=gm("缁忚惀鐜伴噾娴侀噺鍑€棰?,"20251231")/1e8
+        eps=gm("鍩烘湰姣忚偂鏀剁泭","20251231")
+        rev_y=gm("钀ヤ笟鎬绘敹鍏?,"20251231")/1e8
         
-        # 净利增长
-        np_g=(np_y/np_py-1)*100 if np_py>0 else 0
-        # 总股本
-        shares=np_y*1e8/eps if eps>0 else 0
+        # 鍑€鍒╁闀?        np_g=(np_y/np_py-1)*100 if np_py>0 else 0
+        # 鎬昏偂鏈?        shares=np_y*1e8/eps if eps>0 else 0
         
-        # 获取当前价格
+        # 鑾峰彇褰撳墠浠锋牸
         exch="sh" if str(code).startswith("6") else "sz"
         df=ak.stock_zh_a_daily(symbol=exch+str(code),start_date="20260620",end_date="20260625",adjust="qfq")
         price=float(df["close"].iloc[-1])
@@ -112,10 +107,10 @@ def layer1_financial_filter(code):
         return None
 
 def layer1_run(candidates):
-    """运行Layer 1: 基本面筛选"""
+    """杩愯Layer 1: 鍩烘湰闈㈢瓫閫?""
     print(f"\n{'='*80}")
-    print(f"  Layer 1: 基本面筛选")
-    print(f"  候选池: {len(candidates)}只 | {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print(f"  Layer 1: 鍩烘湰闈㈢瓫閫?)
+    print(f"  鍊欓€夋睜: {len(candidates)}鍙?| {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print(f"{'='*80}")
     
     results = []
@@ -124,12 +119,11 @@ def layer1_run(candidates):
         if data:
             data["name"]=name;data["desc"]=desc;data["rarity"]=rarity
             results.append(data)
-            print(f"  {name}({code}): PE={data['pe']:.0f}x OCF/NP={data['ocf_np']:.2f} 增长={data['np_g']:+.0f}%")
+            print(f"  {name}({code}): PE={data['pe']:.0f}x OCF/NP={data['ocf_np']:.2f} 澧為暱={data['np_g']:+.0f}%")
         else:
-            print(f"  {name}({code}): 数据获取失败")
-        time.sleep(0.5)  # 防限流
-    
-    # 打分
+            print(f"  {name}({code}): 鏁版嵁鑾峰彇澶辫触")
+        time.sleep(0.5)  # 闃查檺娴?    
+    # 鎵撳垎
     for r in results:
         ocf_score = 3 if r["ocf_np"]>1.2 else (2 if r["ocf_np"]>0.8 else (1 if r["ocf_np"]>0.5 else 0))
         peg_score = 3 if r["peg"]<0.8 else (2 if r["peg"]<1.5 else (1 if r["peg"]<3.0 else 0))
@@ -140,35 +134,35 @@ def layer1_run(candidates):
         r["growth_score"]=growth_score;r["rarity_score"]=rarity_score
         r["total_score"] = round(ocf_score*0.30 + peg_score*0.25 + growth_score*0.25 + rarity_score*0.20, 2)
         
-        # 通过与否
+        # 閫氳繃涓庡惁
         passes = ocf_score>=2 and peg_score>=2 and growth_score>=2
         r["pass_layer1"] = passes
     
-    # 排序输出
+    # 鎺掑簭杈撳嚭
     results.sort(key=lambda x:x["total_score"], reverse=True)
     
     print(f"\n{'='*100}")
-    print(f"{'排名':<4} {'公司':<10} {'OCF分':<6} {'PEG分':<6} {'增长分':<6} {'稀缺分':<6} {'总分':<6} {'OCF/NP':<8} {'PEG':<8} {'增长':<8} {'PE':<8} {'通过'}")
-    print(f"{'─'*100}")
+    print(f"{'鎺掑悕':<4} {'鍏徃':<10} {'OCF鍒?:<6} {'PEG鍒?:<6} {'澧為暱鍒?:<6} {'绋€缂哄垎':<6} {'鎬诲垎':<6} {'OCF/NP':<8} {'PEG':<8} {'澧為暱':<8} {'PE':<8} {'閫氳繃'}")
+    print(f"{'鈹€'*100}")
     
     passed=[]
     for i,r in enumerate(results,1):
-        p = "✅" if r["pass_layer1"] else "❌"
+        p = "鉁? if r["pass_layer1"] else "鉂?
         if r["pass_layer1"]: passed.append(r)
         print(f"{i:<4} {r['name']:<10} {r['ocf_score']:<6} {r['peg_score']:<6} {r['growth_score']:<6} {r['rarity_score']:<6} {r['total_score']:<6.2f} {r['ocf_np']:<8.2f} {r['peg']:<8.2f} {r['np_g']:<+7.1f}% {r['pe']:<7.1f}x {p}")
     
-    print(f"\n{'─'*100}")
-    print(f"  通过Layer 1: {len(passed)}/{len(results)}")
-    print(f"  条件: OCF/NP>0.8 + PEG<1.5 + 增长>20%")
-    print(f"{'─'*100}")
+    print(f"\n{'鈹€'*100}")
+    print(f"  閫氳繃Layer 1: {len(passed)}/{len(results)}")
+    print(f"  鏉′欢: OCF/NP>0.8 + PEG<1.5 + 澧為暱>20%")
+    print(f"{'鈹€'*100}")
     
     with open(OUT/"layer1_pool.json","w",encoding="utf-8") as f:
         json.dump({"date":str(datetime.now()),"passed":passed,"total":len(results)},f,ensure_ascii=False,indent=2)
-    print(f"  保存至: {OUT}/layer1_pool.json")
+    print(f"  淇濆瓨鑷? {OUT}/layer1_pool.json")
     
     return passed, results
 
-# ===================== Layer 2: V4时机判断 =====================
+# ===================== Layer 2: V4鏃舵満鍒ゆ柇 =====================
 def zscore(s,w=20):
     r=s.rolling(w,min_periods=w);mu=r.mean();sd=r.std().replace(0,np.nan);return (s-mu)/sd
 
@@ -188,7 +182,7 @@ def _i4(dd):dd=dd.copy();dd["ret"]=dd["close"].pct_change();dd["r5"]=dd["close"]
 def _i5(dd):dd=dd.copy();pchg=dd["pct_chg"].fillna(0);thr=pchg.rolling(60).quantile(0.90);dd["eu"]=(pchg>thr.fillna(2)).astype(float);dd["tz"]=zscore(dd["turnover"]);lc=np.where(dd["eu"]==1,-dd["tz"].fillna(0),0);dd["lc"]=zscore(pd.Series(lc).rolling(3).mean());dd5=dd["close"].rolling(5).min()/dd["close"].rolling(5).max()-1;nf=np.where(dd5.fillna(0)<-0.05,-dd5.fillna(0),0);dd["nf"]=zscore(pd.Series(nf));dd["mp"]=(dd["pct_chg"]*dd["amount"]/dd["amount"].rolling(20).mean()).rolling(5).mean();dd["mf"]=zscore(dd["mp"]);dd["nr"]=(dd["lc"].fillna(0)*0.35+dd["nf"].fillna(0)*0.25+dd["mf"].fillna(0)*0.40).rolling(5).mean().fillna(0);return dd[["date","nr"]]
 
 def layer2_v4_signal(code):
-    """获取单只股票的V4信号"""
+    """鑾峰彇鍗曞彧鑲＄エ鐨刅4淇″彿"""
     try:
         exch="sh" if str(code).startswith("6") else "sz"
         df=ak.stock_zh_a_daily(symbol=exch+str(code),start_date="20240101",end_date="20260625",adjust="qfq")
@@ -205,10 +199,10 @@ def layer2_v4_signal(code):
         return None
 
 def layer2_run(stock_list):
-    """运行Layer 2: V4时机判断"""
+    """杩愯Layer 2: V4鏃舵満鍒ゆ柇"""
     print(f"\n{'='*80}")
-    print(f"  Layer 2: V4时机判断")
-    print(f"  分析对象: {len(stock_list)}只（通过Layer 1的标的）")
+    print(f"  Layer 2: V4鏃舵満鍒ゆ柇")
+    print(f"  鍒嗘瀽瀵硅薄: {len(stock_list)}鍙紙閫氳繃Layer 1鐨勬爣鐨勶級")
     print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print(f"{'='*80}")
     
@@ -218,51 +212,51 @@ def layer2_run(stock_list):
         if v4:
             r.update(v4)
             results.append(r)
-            icon = "🟢" if v4["signal_text"]=="BUY" else ("🔴" if v4["signal_text"]=="SELL" else "⚪")
+            icon = "馃煝" if v4["signal_text"]=="BUY" else ("馃敶" if v4["signal_text"]=="SELL" else "鈿?)
             print(f"  {icon} {r['name']}({r['code']}): {v4['signal_text']} z={v4['zscore']:+0.3f}")
         time.sleep(0.3)
     
-    # 操作建议
+    # 鎿嶄綔寤鸿
     print(f"\n{'='*80}")
-    print(f"  综合操作建议（Layer 1通过 + Layer 2信号）")
+    print(f"  缁煎悎鎿嶄綔寤鸿锛圠ayer 1閫氳繃 + Layer 2淇″彿锛?)
     print(f"{'='*80}")
-    print(f"{'信号':<6} {'公司':<10} {'代码':<8} {'zscore':<8} {'Layer1总分':<10} {'建议操作':<20} {'说明'}")
-    print(f"{'─'*80}")
+    print(f"{'淇″彿':<6} {'鍏徃':<10} {'浠ｇ爜':<8} {'zscore':<8} {'Layer1鎬诲垎':<10} {'寤鸿鎿嶄綔':<20} {'璇存槑'}")
+    print(f"{'鈹€'*80}")
     
     for r in sorted(results, key=lambda x:x.get("zscore",-99), reverse=True):
         sig=r["signal_text"]
         z=r["zscore"]
         ts=r["total_score"]
         
-        if sig=="BUY": action="🟢 建仓/加仓"; note="Layer1+Layer2双确认"
-        elif sig=="SELL": action="🔴 减仓/清仓"; note="Layer1确认但V4触发出清"
-        elif z>0.5: action="⬆ 持有(偏多)"; note="Layer1通过,V4偏多"
-        elif z>-0.5: action="⚪ 持有(观望)"; note="Layer1通过,V4中性"
-        else: action="⬇ 持有(警惕)"; note="Layer1通过但V4走弱"
+        if sig=="BUY": action="馃煝 寤轰粨/鍔犱粨"; note="Layer1+Layer2鍙岀‘璁?
+        elif sig=="SELL": action="馃敶 鍑忎粨/娓呬粨"; note="Layer1纭浣哣4瑙﹀彂鍑烘竻"
+        elif z>0.5: action="猬?鎸佹湁(鍋忓)"; note="Layer1閫氳繃,V4鍋忓"
+        elif z>-0.5: action="鈿?鎸佹湁(瑙傛湜)"; note="Layer1閫氳繃,V4涓€?
+        else: action="猬?鎸佹湁(璀︽儠)"; note="Layer1閫氳繃浣哣4璧板急"
         
         print(f"{sig:<6} {r['name']:<10} {str(r['code']):<8} {z:<+8.3f} {ts:<10.2f} {action:<20} {note}")
     
-    print(f"{'─'*80}")
+    print(f"{'鈹€'*80}")
     
     with open(OUT/"layer2_signals.json","w",encoding="utf-8") as f:
         json.dump({"date":str(datetime.now()),"signals":results},f,ensure_ascii=False,indent=2)
-    print(f"  保存至: {OUT}/layer2_signals.json")
+    print(f"  淇濆瓨鑷? {OUT}/layer2_signals.json")
     
     return results
 
-# ===================== 合并报告 =====================
+# ===================== 鍚堝苟鎶ュ憡 =====================
 def full_report(passed, all_layer1, layer2_results):
-    """生成完整合并报告"""
+    """鐢熸垚瀹屾暣鍚堝苟鎶ュ憡"""
     print(f"\n{'='*95}")
-    print(f"  亚翔集成分层选股模型 — 完整报告")
-    print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M')} | 候选池{len(CANDIDATES)}只 → 通过Layer1 {len(passed)}只 → Layer2完成")
+    print(f"  浜氱繑闆嗘垚鍒嗗眰閫夎偂妯″瀷 鈥?瀹屾暣鎶ュ憡")
+    print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M')} | 鍊欓€夋睜{len(CANDIDATES)}鍙?鈫?閫氳繃Layer1 {len(passed)}鍙?鈫?Layer2瀹屾垚")
     print(f"{'='*95}")
-    print(f"{'信号':<6} {'排名':<4} {'公司':<10} {'代码':<8} {'zscore':<8} {'OCF/NP':<8} {'PEG':<8} {'增长':<8} {'PE':<8} {'操作'}")
-    print(f"{'─'*95}")
+    print(f"{'淇″彿':<6} {'鎺掑悕':<4} {'鍏徃':<10} {'浠ｇ爜':<8} {'zscore':<8} {'OCF/NP':<8} {'PEG':<8} {'澧為暱':<8} {'PE':<8} {'鎿嶄綔'}")
+    print(f"{'鈹€'*95}")
     
     l2 = {r["code"]:r for r in layer2_results}
     
-    # 按V4信号排序: BUY > 偏多HOLD > 中性HOLD > 偏弱HOLD > SELL
+    # 鎸塚4淇″彿鎺掑簭: BUY > 鍋忓HOLD > 涓€OLD > 鍋忓急HOLD > SELL
     def sort_key(r):
         sig=r.get("signal",0)
         z=r.get("zscore",0)
@@ -278,18 +272,18 @@ def full_report(passed, all_layer1, layer2_results):
         ng=r.get("np_g",0)
         pe_v=r.get("pe",0)
         
-        if sig=="BUY": action="🟢 建仓"; rank_icon="★"
-        elif sig=="SELL": action="🔴 减仓"; rank_icon=""
-        elif z>0.5: action="⬆ 持有(偏多)"; rank_icon=""
-        else: action="⚪ 持有(观望)"; rank_icon=""
+        if sig=="BUY": action="馃煝 寤轰粨"; rank_icon="鈽?
+        elif sig=="SELL": action="馃敶 鍑忎粨"; rank_icon=""
+        elif z>0.5: action="猬?鎸佹湁(鍋忓)"; rank_icon=""
+        else: action="鈿?鎸佹湁(瑙傛湜)"; rank_icon=""
         
         print(f"{sig:<6} {rank_icon+' '+str(i) if rank_icon else str(i):<4} {r['name']:<10} {str(r['code']):<8} {z:<+8.3f} {ocf:<8.2f} {peg_v:<8.2f} {ng:<+7.1f}% {pe_v:<7.1f}x {action}")
     
-    print(f"{'─'*95}")
-    print(f"  买入池: {len([r for r in combined if r.get('signal')==1])}只")
-    print(f"  持有池: {len([r for r in combined if r.get('signal')==0])}只")  
-    print(f"  减仓池: {len([r for r in combined if r.get('signal')==-1])}只")
-    print(f"{'─'*95}")
+    print(f"{'鈹€'*95}")
+    print(f"  涔板叆姹? {len([r for r in combined if r.get('signal')==1])}鍙?)
+    print(f"  鎸佹湁姹? {len([r for r in combined if r.get('signal')==0])}鍙?)  
+    print(f"  鍑忎粨姹? {len([r for r in combined if r.get('signal')==-1])}鍙?)
+    print(f"{'鈹€'*95}")
     
     rep = {
         "date":str(datetime.now()),"total_candidates":len(CANDIDATES),
@@ -304,28 +298,28 @@ def full_report(passed, all_layer1, layer2_results):
     }
     with open(OUT/"full_report.json","w",encoding="utf-8") as f:
         json.dump(rep,f,ensure_ascii=False,indent=2)
-    print(f"\n  完整报告保存至: {OUT}/full_report.json")
+    print(f"\n  瀹屾暣鎶ュ憡淇濆瓨鑷? {OUT}/full_report.json")
     print(f"{'='*95}")
     
     return rep
 
-# ===================== 主入口 =====================
+# ===================== 涓诲叆鍙?=====================
 if __name__ == "__main__":
     print(f"\n{'='*80}")
-    print(f"  亚翔集成分层选股模型 v1.0")
-    print(f"  Layer 1: 基本面筛选 | Layer 2: V4时机判断")
+    print(f"  浜氱繑闆嗘垚鍒嗗眰閫夎偂妯″瀷 v1.0")
+    print(f"  Layer 1: 鍩烘湰闈㈢瓫閫?| Layer 2: V4鏃舵満鍒ゆ柇")
     print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print(f"{'='*80}")
     
-    # === Layer 1: 基本面筛选 ===
+    # === Layer 1: 鍩烘湰闈㈢瓫閫?===
     passed, all_layer1 = layer1_run(CANDIDATES)
     
-    # === Layer 2: V4时机判断（仅对通过Layer1的标的运行） ===
+    # === Layer 2: V4鏃舵満鍒ゆ柇锛堜粎瀵归€氳繃Layer1鐨勬爣鐨勮繍琛岋級 ===
     if passed:
         layer2_results = layer2_run(passed)
-        # === 完整报告 ===
+        # === 瀹屾暣鎶ュ憡 ===
         full_report(passed, all_layer1, layer2_results)
     else:
-        print("\n  Layer 1 无通过标的，Layer 2 跳过")
+        print("\n  Layer 1 鏃犻€氳繃鏍囩殑锛孡ayer 2 璺宠繃")
     
-    print(f"\n  运行完成 ✅")
+    print(f"\n  杩愯瀹屾垚 鉁?)
