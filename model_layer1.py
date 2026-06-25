@@ -17,7 +17,7 @@ from pathlib import Path
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 # ===================== 閰嶇疆鍖?=====================
-OUT = Path(__file__).parent
+OUT = Path(__file__).parent / "outputs"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # 鍊欓€夎偂绁ㄦ睜锛堝彲鑷澧炲垹锛?CANDIDATES = [
